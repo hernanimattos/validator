@@ -23,10 +23,10 @@ const rules = {
   eu: {
     type: 'array',
     message: 'erro no array',
-    // items: {
-    //   type: String,
-    //   //   matchesOneOf: [''],
-    // },
+    of: {
+      type: 'string',
+      //   matchesOneOf: [''],
+    },
   },
 };
 
@@ -36,19 +36,31 @@ const rules = {
 
 const allRules = Object.keys(rules)
   .map((ruleKey) => {
-    // const allRules = {};
+    let arrayRules = {};
 
     if (rules[ruleKey].type === 'array') {
-      //   rules[ruleKey] = new Rule({
-      //     type: 'array',
-      //     of: new Rule({ type: 'string' }),
-      //   });
-      console.log(rules[ruleKey]);
+      const { message, of } = rules[ruleKey];
+
+      const ruleProps = {
+        [ruleKey]: new Rule(
+          {
+            type: 'array',
+            of: new Rule({ type: 'string' }),
+          },
+          'ppppppp'
+        ),
+      };
+
+      arrayRules = {
+        [ruleKey]: new Rule({
+          type: rules[ruleKey].type,
+        }),
+      };
     }
 
     const { type, message, ...restRules } = rules[ruleKey];
 
-    return {
+    const fixtureRules = {
       [ruleKey]: new Rule(
         {
           type: type,
@@ -56,11 +68,62 @@ const allRules = Object.keys(rules)
         },
         message
       ),
+      // eu: {},
+      ...arrayRules,
+    };
+
+    // console.log(rules);
+
+    return {
+      ...fixtureRules,
     };
   })
   .reduce((a, b) => Object.assign(a, b), {});
 
 const val = new Validator(allRules);
-const errors = val.getErrors({ teste: 5 });
+const errors = val.getErrors({ teste: 5, eu: [' dddd'], nome: ' gggg' });
 
 console.log(errors);
+
+// console.log(JSON.stringify(allRules));
+
+const emailRule = new Rule(
+  {
+    type: 'email',
+    user: (user) => user === 'dedede',
+    domain: (domain) => ['outlook', 'gmail', 'yahoo'].indexOf(domain) !== -1,
+  },
+  null
+);
+
+const passwordRule = new Rule(
+  {
+    type: 'password',
+    minLength: 8,
+    uppercase: 1,
+    numbers: 1,
+    matchesOneOf: ['@', '_', '-', '.', '!'],
+  },
+  null
+);
+
+const vComplex = new Validator({
+  age: new Rule({ type: 'int', min: 18, max: 99 }),
+  dateOfBirth: new Rule({ type: 'date' }),
+  array: new Rule(
+    { type: 'array', of: new Rule({ type: 'string' }, ' jjjj') },
+    'ppppppp'
+  ),
+  email: emailRule,
+  password: passwordRule,
+});
+
+const eee = vComplex.getErrors({
+  age: 26,
+  dateOfBirth: new Date(1995, 10, 3),
+  array: [1],
+  email: 'dedede@yahoo.fr;',
+  password: 'ad1_A@@Axs',
+}); /// returns true
+
+console.log(eee);
